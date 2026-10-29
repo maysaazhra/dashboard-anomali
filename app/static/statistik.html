@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard Analisis &amp; Visualisasi Grafik SE2026 - BPS Banyumas</title>
+  <meta name="description" content="Dashboard interaktif analisis pola ketidakwajaran, sebaran wilayah 27 kecamatan, dan rekomendasi prioritas verifikasi data Sensus Ekonomi 2026 BPS Kabupaten Banyumas.">
+  <link rel="icon" href="/static/images/logo_bps_banyumas.png" type="image/png">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/vendor/chart.umd.min.js"></script>
+  <script src="/static/app.js" defer></script>
+</head>
+<body data-page="statistik">
+<!-- Topbar Navigation Header -->
+<header class="topbar">
+  <div class="container topbar-inner">
+    <a class="brand" href="/" aria-label="Beranda Dashboard BPS SE2026">
+      <div class="brand-box-bps">
+        <img src="/static/images/logo_bps_banyumas.png" alt="Badan Pusat Statistik Kabupaten Banyumas">
+      </div>
+      <div class="brand-divider"></div>
+      <div class="brand-box-se">
+        <img src="/static/images/logo_se2026.png" alt="Sensus Ekonomi 2026">
+      </div>
+      <div class="brand-text-block">
+        <span class="brand-title">BPS KAB. BANYUMAS</span>
+        <span class="brand-sub">Anomali Sensus Ekonomi 2026</span>
+      </div>
+    </a>
+
+    <!-- Navigation Pills -->
+    <nav class="nav-pills" aria-label="Menu Utama">
+      <a class="nav-link" href="/">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        <span>Ringkasan</span>
+      </a>
+      <a class="nav-link active" href="/statistik">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+        <span>Dashboard Analisis</span>
+      </a>
+      <button type="button" class="nav-link" id="btn-buka-kamus" style="background:transparent; border:none; cursor:pointer;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+        <span>Kamus Anomali</span>
+      </button>
+    </nav>
+
+    <!-- Topbar Tools -->
+    <div class="topbar-kanan">
+      <!-- Dark/Light Theme Switcher -->
+      <button class="btn-theme" id="theme-toggle" type="button" title="Ganti Mode Tampilan (Terang/Gelap)" aria-label="Toggle Theme">
+        <svg id="icon-theme" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+      </button>
+
+      <!-- Anomaly Status Pill -->
+      <div class="status-pill" id="status-data" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        <span id="status-data-teks">0 Anomali</span>
+      </div>
+
+      <!-- Upload Button Link to Home -->
+      <a class="btn-upload-top" href="/" style="text-decoration:none;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
+        <span>Unggah Data</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- Sticky Filterbar -->
+<div class="filterbar" id="filterbar" hidden>
+  <div class="container filterbar-inner">
+    <nav class="jejak" id="jejak" aria-label="Wilayah aktif"></nav>
+    <div class="filterbar-aksi">
+      <div class="filter-group">
+        <label for="pilih-kec">Filter Wilayah:</label>
+        <select id="pilih-kec" aria-label="Filter kecamatan"></select>
+      </div>
+      <button class="btn-kamus" id="btn-kamus-filter" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+        <span>Kamus Anomali</span>
+      </button>
+      <a class="btn-export" id="unduh" href="/api/ekspor">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M8 13h2"/><path d="M14 13h2"/><path d="M8 17h2"/><path d="M14 17h2"/><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/></svg>
+        <span>Ekspor Rekap Excel</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<main>
+  <!-- Error notification -->
+  <div class="error-banner" id="error" hidden></div>
+
+  <!-- Empty State when no data is uploaded yet -->
+  <section class="kosong-card" id="kosong" hidden>
+    <div style="display:inline-flex; padding:1rem; border-radius:9999px; background-color:var(--rose-soft); color:var(--rose-500); margin-bottom:1rem;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <h2>Belum Ada Dataset yang Dimuat</h2>
+    <p>Silakan upload file Excel ekspor FASIH terlebih dahulu di halaman Beranda untuk melihat analitik dan visualisasi statistik lengkap.</p>
+    <a class="btn-hero-primary" href="/" style="display:inline-flex;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
+      <span>Buka Halaman Upload Data</span>
+    </a>
+  </section>
+
+  <!-- Content Sections -->
+  <div id="konten" hidden style="display:flex; flex-direction:column; gap:2rem;">
+    <!-- Page Header Bar -->
+    <div class="page-header-bar">
+      <div>
+        <div class="page-header-title">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+          <span id="judul-halaman">Dashboard Analisis &amp; Visualisasi Grafik</span>
+        </div>
+        <p class="page-header-sub" id="info-file">Memuat informasi dataset…</p>
+      </div>
+      <div id="quick-stats-badge" style="display:flex; align-items:center; gap:0.5rem; font-size:0.75rem;"></div>
+    </div>
+
+    <!-- 4 KPI Summary Metric Cards -->
+    <div class="kpi-grid" id="tiles-kpi"></div>
+
+    <!-- Main Progress Bar -->
+    <div id="progres-utama"></div>
+
+    <!-- Priority Follow-Up Chips -->
+    <section class="prioritas-card">
+      <div class="prioritas-head">
+        <h2>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>Prioritas Alokasi Verifikasi Lapangan</span>
+        </h2>
+        <span id="prioritas-ket"></span>
+      </div>
+      <div class="chips" id="prioritas"></div>
+    </section>
+
+    <!-- Section 1: Komposisi & Peringkat -->
+    <div>
+      <h2 class="section-heading">
+        <span class="section-badge">1</span>
+        <span>Komposisi &amp; Peringkat Anomali</span>
+      </h2>
+      <div class="charts-grid">
+        <!-- Card 1: Diagram Donat -->
+        <section class="chart-card">
+          <div class="chart-card-head">
+            <h3>Diagram Komposisi</h3>
+            <select id="pilih-donat" aria-label="Pilih data diagram komposisi"></select>
+          </div>
+          <div class="chart-container" style="height:270px;">
+            <canvas id="chart-donat" aria-label="Diagram donat komposisi"></canvas>
+          </div>
+          <p class="chart-note" id="catatan-donat"></p>
+          <div class="table-responsive" id="tabel-donat" style="margin-top:1.25rem;"></div>
+        </section>
+
+        <!-- Card 2: Diagram Batang Horizontal -->
+        <section class="chart-card">
+          <div class="chart-card-head">
+            <h3>Diagram Peringkat</h3>
+            <select id="pilih-batang" aria-label="Pilih data diagram peringkat"></select>
+          </div>
+          <div class="chart-container" id="wrap-batang">
+            <canvas id="chart-batang" aria-label="Diagram batang peringkat"></canvas>
+          </div>
+          <p class="chart-note" id="catatan-batang"></p>
+        </section>
+      </div>
+    </div>
+
+    <!-- Section 2: Status Tindak Lanjut -->
+    <div>
+      <h2 class="section-heading">
+        <span class="section-badge">2</span>
+        <span>Status Tindak Lanjut per Kategori</span>
+      </h2>
+      <section class="chart-card">
+        <div class="chart-card-head">
+          <div>
+            <h3>Sudah vs Belum Ditindaklanjuti</h3>
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">Proporsi verifikasi lapangan (Perbaikan, Penjelasan, Belum)</p>
+          </div>
+          <select id="pilih-tumpuk" aria-label="Pilih data diagram status"></select>
+        </div>
+        <div class="chart-container" id="wrap-tumpuk">
+          <canvas id="chart-tumpuk" aria-label="Diagram batang bertumpuk"></canvas>
+        </div>
+        <p class="chart-note" id="catatan-tumpuk"></p>
+      </section>
+    </div>
+
+    <!-- Section 3: Rekap Monitoring Wilayah -->
+    <div id="rekap">
+      <h2 class="section-heading">
+        <span class="section-badge">3</span>
+        <span id="judul-rekap">Rekap Monitoring Wilayah</span>
+      </h2>
+      <section class="chart-card">
+        <p class="chart-note" id="catatan-rekap" style="margin-top:0; margin-bottom:1rem;"></p>
+        <div class="table-responsive" id="tabel-rekap"></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<!-- Modal Kamus Anomali -->
+<div class="modal-overlay" id="modal-kamus">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+        <span>Kamus &amp; Keterangan Anomali FASIH SE2026</span>
+      </h3>
+      <button class="modal-close" id="btn-tutup-kamus" type="button" aria-label="Tutup Kamus">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <h4 class="kamus-group-title">Kategori Anomali Usaha (U1 – U8)</h4>
+        <div class="kamus-grid">
+          <div class="kamus-item"><span class="kamus-code">U1</span><span class="kamus-text">Biaya Produksi Dominan</span></div>
+          <div class="kamus-item"><span class="kamus-code">U2</span><span class="kamus-text">Keuntungan Usaha Tidak Wajar</span></div>
+          <div class="kamus-item"><span class="kamus-code">U3</span><span class="kamus-text">Bukan Badan Usaha tetapi Ada Penyertaan Modal Korporasi</span></div>
+          <div class="kamus-item"><span class="kamus-code">U4</span><span class="kamus-text">Data Keuangan MBG / KRT</span></div>
+          <div class="kamus-item"><span class="kamus-code">U5</span><span class="kamus-text">Konsistensi Aset, Pekerja, dan Produksi Usaha</span></div>
+          <div class="kamus-item"><span class="kamus-code">U6</span><span class="kamus-text">Usaha Menengah/Besar tanpa Internet</span></div>
+          <div class="kamus-item"><span class="kamus-code">U7</span><span class="kamus-text">Usaha Menengah/Besar tanpa Laporan Keuangan</span></div>
+          <div class="kamus-item"><span class="kamus-code">U8</span><span class="kamus-text">Perbedaan KBLI 2 Digit Pendataan dan SBR</span></div>
+        </div>
+      </div>
+      <div>
+        <h4 class="kamus-group-title">Kategori Anomali Keluarga (K1 – K7)</h4>
+        <div class="kamus-grid">
+          <div class="kamus-item"><span class="kamus-code">K1</span><span class="kamus-text">KK dan Pasangan Berstatus Cerai / Belum Kawin</span></div>
+          <div class="kamus-item"><span class="kamus-code">K2</span><span class="kamus-text">Umur KK &lt; 10 Tahun dan Rumah Milik Sendiri</span></div>
+          <div class="kamus-item"><span class="kamus-code">K3</span><span class="kamus-text">Semua Anggota Keluarga Mengalami Disabilitas</span></div>
+          <div class="kamus-item"><span class="kamus-code">K4</span><span class="kamus-text">Luas Lantai per Kapita &lt; 3 m² atau &gt; 200 m²</span></div>
+          <div class="kamus-item"><span class="kamus-code">K5</span><span class="kamus-text">Selisih Pendapatan dan Pengeluaran Bernilai Negatif</span></div>
+          <div class="kamus-item"><span class="kamus-code">K6</span><span class="kamus-text">Listrik &lt; Rp100rb / Daya &lt; 900W tetapi Memiliki Kulkas/AC/Komputer</span></div>
+          <div class="kamus-item"><span class="kamus-code">K7</span><span class="kamus-text">Jumlah Anggota Keluarga &gt; 10 Orang</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Rich Footer matching reference -->
+<footer class="footer-rich">
+  <div class="container" style="display:flex; flex-direction:column; gap:2rem;">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logos">
+          <div class="footer-logo-box-bps">
+            <img src="/static/images/logo_bps_banyumas.png" alt="BPS Kabupaten Banyumas">
+          </div>
+          <div class="footer-logo-box-se">
+            <img src="/static/images/logo_se2026.png" alt="Sensus Ekonomi 2026">
+          </div>
+        </div>
+        <div class="footer-brand-text">
+          <h3>Badan Pusat Statistik Kabupaten Banyumas</h3>
+          <p>Sistem Pemutakhiran, Visualisasi Spasial &amp; Analisis Anomali Data Usaha SE2026</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-columns">
+      <!-- Col 1: Web Resmi BPS -->
+      <div>
+        <h4 class="footer-col-title">
+          <span class="footer-col-dot blue"></span>
+          <span>Web Resmi BPS</span>
+        </h4>
+        <ul class="footer-links-list">
+          <li>
+            <a class="footer-link-card" href="https://banyumaskab.bps.go.id" target="_blank" rel="noopener noreferrer">
+              <div class="footer-link-left">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                <span>BPS Kabupaten Banyumas</span>
+              </div>
+              <span class="footer-link-badge">Web Resmi</span>
+            </a>
+          </li>
+          <li>
+            <a class="footer-link-card" href="https://www.bps.go.id" target="_blank" rel="noopener noreferrer">
+              <div class="footer-link-left">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                <span>Portal Utama BPS RI</span>
+              </div>
+              <span class="footer-link-badge">BPS Pusat</span>
+            </a>
+          </li>
+          <li>
+            <a class="footer-link-card" href="https://jateng.bps.go.id" target="_blank" rel="noopener noreferrer">
+              <div class="footer-link-left">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                <span>BPS Provinsi Jawa Tengah</span>
+              </div>
+              <span class="footer-link-badge">BPS Prov</span>
+            </a>
+          </li>
+          <li>
+            <a class="footer-link-card" href="https://se2026.bps.go.id" target="_blank" rel="noopener noreferrer">
+              <div class="footer-link-left">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                <span>Portal Sensus Ekonomi 2026</span>
+              </div>
+              <span class="footer-link-badge">SE2026</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Col 2: Kontak & Kantor BPS -->
+      <div>
+        <h4 class="footer-col-title">
+          <span class="footer-col-dot emerald"></span>
+          <span>Kontak &amp; PST Banyumas</span>
+        </h4>
+        <div class="footer-contact-list">
+          <div class="footer-contact-item">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+            <div>
+              <strong style="color:#ffffff;">Jl. Warga Bhakti No. 5</strong>, Purwokerto, Kabupaten Banyumas, Jawa Tengah 53114
+            </div>
+          </div>
+          <div class="footer-contact-item">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <span class="font-mono">(0281) 635496</span>
+          </div>
+          <div class="footer-contact-item">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <a href="mailto:bps3302@bps.go.id" style="color:#cbd5e1; text-decoration:underline;">bps3302@bps.go.id</a>
+          </div>
+          <div class="footer-contact-item">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <div>
+              <p style="color:#ffffff; font-weight:600;">Jam Layanan PST:</p>
+              <p style="color:#94a3b8; font-size:0.6875rem;">Senin – Kamis: 08.00 – 15.30 WIB | Jumat: 08.00 – 16.00 WIB</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div>
+        &copy; 2026 <strong>Badan Pusat Statistik Kabupaten Banyumas</strong>. Hak Cipta Dilindungi Undang-Undang.
+      </div>
+      <div>
+        Monitoring Data Sensus Ekonomi 2026
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Fixed Bottom Navigation for Mobile -->
+<nav class="mobile-nav-bar" aria-label="Navigasi Bawah Mobile">
+  <a class="mobile-nav-item" href="/">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+    <span>Ringkasan</span>
+  </a>
+  <a class="mobile-nav-item active" href="/statistik">
+    <div class="mobile-nav-indicator"></div>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+    <span>Analisis</span>
+  </a>
+  <button class="mobile-nav-item" type="button" id="btn-kamus-mobile" style="background:transparent; border:none; cursor:pointer;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+    <span>Kamus</span>
+  </button>
+  <a class="mobile-nav-item" href="/api/ekspor">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M8 13h2"/><path d="M14 13h2"/><path d="M8 17h2"/><path d="M14 17h2"/><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/></svg>
+    <span>Ekspor</span>
+  </a>
+</nav>
+
+</body>
+</html>
