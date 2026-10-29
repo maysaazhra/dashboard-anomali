@@ -374,10 +374,6 @@ async function initBeranda() {
     $('upload')?.scrollIntoView({ behavior: 'smooth' });
     input?.click();
   });
-  $('btn-hero-upload')?.addEventListener('click', () => {
-    $('upload')?.scrollIntoView({ behavior: 'smooth' });
-    input?.click();
-  });
 
   async function upload(file) {
     $('error').hidden = true;
